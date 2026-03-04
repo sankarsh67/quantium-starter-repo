@@ -1,26 +1,29 @@
-import pandas as pd
+import csv
+import os
 
-# Load the three CSV files
-df0 = pd.read_csv("data/daily_sales_data_0.csv")
-df1 = pd.read_csv("data/daily_sales_data_1.csv")
-df2 = pd.read_csv("data/daily_sales_data_2.csv")
+DATA_DIRECTORY = "./data"
+OUTPUT_FILE_PATH = "./formatted_data.csv"
 
-# Combine them
-combined_df = pd.concat([df0, df1, df2], ignore_index=True)
+with open(OUTPUT_FILE_PATH, "w", newline="") as output_file:
+    writer = csv.writer(output_file)
+    writer.writerow(["sales", "date", "region"])
 
-# Filter only pink morsel (all lowercase)
-pink_df = combined_df[combined_df["product"] == "pink morsel"].copy()
+    for file_name in os.listdir(DATA_DIRECTORY):
+        with open(f"{DATA_DIRECTORY}/{file_name}", "r") as input_file:
+            reader = csv.reader(input_file)
+            next(reader)  # skip header row
 
-# Create Sales column
-pink_df["Sales"] = pink_df["quantity"] * pink_df["price"]
+            for row in reader:
+                product = row[0]
+                raw_price = row[1]
+                quantity = row[2]
+                transaction_date = row[3]
+                region = row[4]
 
-# Keep only required columns
-final_df = pink_df[["Sales", "date", "region"]]
+                if product == "pink morsel":
+                    price = float(raw_price[1:])
+                    sale = price * int(quantity)
 
-# Rename columns properly
-final_df.columns = ["Sales", "Date", "Region"]
+                    writer.writerow([sale, transaction_date, region])
 
-# Save final output
-final_df.to_csv("formatted_sales.csv", index=False)
-
-print("Data processing complete. File saved as formatted_sales.csv")
+print("formatted_data.csv created successfully")
